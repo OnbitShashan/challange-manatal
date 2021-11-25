@@ -11,14 +11,18 @@
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn color="pink lighten-1" text @click="$emit('close', '')">Close</v-btn>
-                <v-btn color="blue darken-1" text @click="$emit('close', {id:dialogData.id,title:dialogData.headline})">Save</v-btn>
+                <v-btn
+                    color="blue darken-1"
+                    text
+                    @click="$emit('close', { id: dialogData.id, title: dialogData.headline })"
+                >Save</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
 <script>
 export default {
-    name: 'Toolbar',
+    name: 'TextEditModal',
     props: ["model", "data"],
     data() {
         return {

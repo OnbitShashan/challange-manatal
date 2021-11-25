@@ -1,0 +1,1 @@
+export { default as newsRoutes } from './news-routes';

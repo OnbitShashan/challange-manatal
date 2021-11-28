@@ -5,18 +5,12 @@
 </template>
 
 <script>
+import { mapState } from 'vuex';
 export default {
     name: "OverlayLoader",
 
-    data: function () {
-        return {
-            overlay: false
-        };
-    },
-    created: function () {
-        this.$root.$on('overlay-loader', (value) => {
-            this.overlay = value;
-        });
-    }
+    computed: mapState({
+        overlay: state => state.news.isOverlayLoading,
+    })
 }
 </script>

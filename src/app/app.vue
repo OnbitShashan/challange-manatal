@@ -11,7 +11,7 @@
     </v-app-bar>
 
     <overlay-loader></overlay-loader>
-    <error-handler-snackbar></error-handler-snackbar>
+    <snackbar-handler></snackbar-handler>
 
     <v-main>
       <router-view />
@@ -22,13 +22,13 @@
 
 <script>
 import OverlayLoader from "@/app/shared/components/overlay-loader.vue"
-import ErrorHandlerSnackbar from "@/app/shared/components/error-handler-snackbar.vue"
+import SnackbarHandler from "@/app/shared/components/snackbar-handler.vue"
 
 export default {
   name: "App",
   components: {
     OverlayLoader,
-    ErrorHandlerSnackbar
+    SnackbarHandler
   }
 }
 </script>

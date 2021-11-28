@@ -11,7 +11,7 @@
           clearable
           v-debounce:500="getNewsTopHeadlines"
         ></v-text-field>
-        <filter-sources-modal :selected="selectedSource" @filter="filterBySource"></filter-sources-modal>
+        <filter-sources-modal></filter-sources-modal>
         <v-btn class="mb-3 mb-sm-0" color="grey lighten-5" light @click="reset()">Reset</v-btn>
       </v-col>
     </v-row>
@@ -69,7 +69,7 @@ import CardToolbar from "@/app/shared/components/card-toolbar.vue"
 import TextEditModal from "@/app/shared/components/text-edit-modal.vue"
 import VisitedHistoryModal from "@/app/news/shared/components/visited-history.vue"
 import FilterSourcesModal from "@/app/news/shared/components/filter-by-sources.vue"
-import { fetchNewsTopHeadlines, fetchErrorResult } from '../shared/services';
+import { mapActions, mapMutations, mapState } from 'vuex'
 
 export default {
   name: 'NewsHeadlines',
@@ -82,10 +82,7 @@ export default {
   data: function () {
     return {
       titleDialog: false,
-      filterDialog: false,
       history: false,
-      searchText: '',
-      selectedSource: {},
       btn1: {
         click: this.editTitle,
         name: 'Edit Title',
@@ -108,10 +105,22 @@ export default {
           value => !!value || 'Required.',
           value => (value || '').length <= this.titleDialogData.count || `Max ${this.titleDialogData.count} characters`,
         ],
-      },
-      headlines: [],
-      sources: [],
+      }
     };
+  },
+  computed: {
+    ...mapState({
+      headlines: state => state.news.headlines,
+      selectedSource: state => state.news.headlineFilterSources,
+    }),
+    searchText: {
+      get: function () {
+        return this.$store.state.news.headlineSearchText;
+      },
+      set: function (text) {
+        this.setHeadlinesSearchText(text);
+      }
+    }
   },
   created: function () {
     this.getNewsTopHeadlines();
@@ -138,53 +147,21 @@ export default {
       this.history = false;
     },
 
-    async getNewsTopHeadlines() {
-      this.$root.$emit('overlay-loader', true)
-      let params;
-      if (this.selectedSource && this.selectedSource.id) {
-        params = { sources: this.selectedSource.id, q: this.searchText }
-      } else if (this.searchText !== '') {
-        params = { q: this.searchText }
-      } else {
-        params = { country: 'us' }
-      }
-
-      try {
-        const topHeadlinesRes = await fetchNewsTopHeadlines(params);
-        this.headlines = [...topHeadlinesRes.articles];
-        console.log(this.headlines)
-      } catch (e) {
-        console.error(`getNewsTopHeadlines: ${e}`)
-        this.$root.$emit('show-error', 'An error occured. Please contact administratior!');
-      } finally {
-        this.$root.$emit('overlay-loader', false);
-      }
-    },
-
-    async filterBySource(source) {
-      this.filterDialog = false;
-      this.selectedSource = source;
-      this.getNewsTopHeadlines();
-    },
-
     reset() {
-      this.searchText = '';
-      this.selectedSource = '';
+      this.setHeadlineFilterSources('');
+      this.setHeadlinesSearchText('');
       this.getNewsTopHeadlines();
     },
 
-    async makeWrongApiCall() {
-      this.$root.$emit('overlay-loader', true);
-      try {
-        const response = await fetchErrorResult();
-        console.log(response)
-      } catch (e) {
-        console.error(`makeWrongApiCall: ${e}`)
-        this.$root.$emit('show-error', 'An error occured. Please contact administratior!');
-      } finally {
-        this.$root.$emit('overlay-loader', false);
-      }
-    }
-  },
+    ...mapMutations({
+      setHeadlineFilterSources: 'news/setHeadlineFilterSources',
+      setHeadlinesSearchText: 'news/setHeadlinesSearchText'
+    }),
+
+    ...mapActions({
+      makeWrongApiCall: 'news/makeWrongApiCall', // map `this.add()` to `this.$store.dispatch('increment')`,
+      getNewsTopHeadlines: 'news/getNewsTopHeadlines'
+    })
+  }
 }
 </script>

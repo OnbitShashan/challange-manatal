@@ -10,4 +10,16 @@ const fetchNewsTopHeadlines = async (params) => {
   }).then(res => res.data);
 };
 
-export { fetchNewsTopHeadlines };
+const fetchAllSources = async () => {
+  return await axios.get(API_CONSTANTS.fetchAllSources, {
+    params: {
+      apiKey: API_KEY,
+    }
+  }).then(res => res.data);
+};
+
+const fetchErrorResult = async () => {
+  return await axios.get(API_CONSTANTS.invalidCall).then(res => res.data);
+};
+
+export { fetchNewsTopHeadlines, fetchAllSources, fetchErrorResult };

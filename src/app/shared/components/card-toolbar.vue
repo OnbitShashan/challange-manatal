@@ -1,6 +1,6 @@
 <template>
     <v-card-actions>
-        <v-btn text @click.stop="btn1Data.click(btn1ClickData)" v-if="btn1Data">
+        <v-btn text @click="btn1Data.click(btn1ClickData)" v-if="btn1Data">
             {{ btn1Data.name }}
             <v-icon small right :color="btn1Data.iconColor">{{ btn1Data.icon }}</v-icon>
         </v-btn>
@@ -15,11 +15,14 @@
 export default {
     name: 'CardToolbar',
     props: ["btn1", "btn2", "btn1ClickData", "btn2ClickData"],
-    data() {
+    data: function () {
         return {
             btn1Data: this.btn1,
             btn2Data: this.btn2
         };
+    },
+    mounted: function(){
+        // console.log(this.btn1ClickData, this.btn1)
     }
 };
 </script>

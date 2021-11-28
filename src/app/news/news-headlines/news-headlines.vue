@@ -1,45 +1,27 @@
 <template>
   <v-container>
     <v-row>
-      <v-col cols="12" class="d-flex align-center justify-center flex-wrap">
+      <v-col cols="12" class="d-flex align-center flex-wrap">
         <v-text-field
           id="search"
-          class="mr-sm-2 mr-0"
+          class="mr-2"
           label="Search for a Headline"
           v-model="searchText"
+          @click:clear="searchText = ''; getNewsTopHeadlines()"
           clearable
-          v-debounce:500="filterByText"
+          v-debounce:500="getNewsTopHeadlines"
         ></v-text-field>
-        <v-dialog v-model="filterDialog" width="500">
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn
-              class="mb-3 mb-sm-0"
-              color="blue lighten-1"
-              dark
-              v-bind="attrs"
-              v-on="on"
-            >Filter by Source</v-btn>
-          </template>
-          <v-card>
-            <v-card-title class="text-h5 blue--text lighten-1">Select Source</v-card-title>
-            <v-divider></v-divider>
-            <v-chip
-              class="ma-1"
-              filter
-              v-for="(source) in sources"
-              :key="source.id"
-              @click="filterBySource(source)"
-              :color="selectedSource.name === source.name ? 'pink lighten-3' : ''"
-            >{{ source.name }}</v-chip>
-          </v-card>
-        </v-dialog>
+        <filter-sources-modal :selected="selectedSource" @filter="filterBySource"></filter-sources-modal>
+        <v-btn class="mb-3 mb-sm-0" color="grey lighten-5" light @click="reset()">Reset</v-btn>
       </v-col>
     </v-row>
+
     <h4
       type="button"
       class="mb-2 indigo--text text--lighten-3 font-weight-light"
       @click.stop="history = true"
     >View Visted History</h4>
+
     <h1
       class="my-5 indigo--text text--lighten-1 font-weight-light"
     >Top Headlines {{ selectedSource.name ? `from ${selectedSource.name}` : '' }}</h1>
@@ -49,33 +31,35 @@
         <v-card>
           <v-img
             :src="headline.urlToImage"
-            class="white--text"
-            gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
-            height="200px"
+            class="white--text align-center"
+            gradient="to bottom, rgba(0,0,0,.4), rgba(0,0,0,.8)"
+            height="250px"
+            type="button"
+            @click="readMore(headline)"
           >
             <v-card-title class="text-break" v-text="headline.title"></v-card-title>
           </v-img>
 
-          <card-toolbar :btn1="btn1" :btn2="btn2" :btn2ClickData="headline"></card-toolbar>
+          <card-toolbar
+            :btn1="btn1"
+            :btn1ClickData="{ 'text': headline.title, 'index': index }"
+            :btn2="btn2"
+            :btn2ClickData="headline"
+          ></card-toolbar>
         </v-card>
       </v-col>
     </v-row>
 
-    <v-dialog v-model="history" width="80vw">
-      <v-card>
-        <v-card-title class="grey lighten-3">History</v-card-title>
-        <div class="pa-2">Visited headline</div>
-        <div class="pa-2">Visited headline</div>
-        <div class="pa-2">Visited headline</div>
-        <v-divider></v-divider>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="pink lighten-1" text @click="history = false">Close</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <v-btn class="mt-7" color="red darken-1" dark @click="makeWrongApiCall()">Make a wrong api call</v-btn>
 
-    <text-edit-modal :model="titleDialog" :data="titleDialogData" @close="titleDialogClose"></text-edit-modal>
+    <visited-history-modal :view-history-dialog="history" @close="historyDialogClose"></visited-history-modal>
+    <text-edit-modal
+      :model="titleDialog"
+      :data="titleDialogData"
+      @close="titleDialogClose"
+      :count="titleDialogData.count"
+      :rules="titleDialogData.rules"
+    ></text-edit-modal>
   </v-container>
 </template>
 
@@ -83,16 +67,19 @@
 // @ is an alias to /src
 import CardToolbar from "@/app/shared/components/card-toolbar.vue"
 import TextEditModal from "@/app/shared/components/text-edit-modal.vue"
-import axios from 'axios';
-import { fetchNewsTopHeadlines } from '../shared/services';
+import VisitedHistoryModal from "@/app/news/shared/components/visited-history.vue"
+import FilterSourcesModal from "@/app/news/shared/components/filter-by-sources.vue"
+import { fetchNewsTopHeadlines, fetchErrorResult } from '../shared/services';
 
 export default {
   name: 'NewsHeadlines',
   components: {
     CardToolbar,
-    TextEditModal
+    TextEditModal,
+    VisitedHistoryModal,
+    FilterSourcesModal
   },
-  data() {
+  data: function () {
     return {
       titleDialog: false,
       filterDialog: false,
@@ -100,7 +87,7 @@ export default {
       searchText: '',
       selectedSource: {},
       btn1: {
-        click: () => this.titleDialog = true,
+        click: this.editTitle,
         name: 'Edit Title',
         icon: 'mdi-pencil',
         iconColor: 'grey darken-2'
@@ -114,80 +101,89 @@ export default {
       titleDialogData: {
         title: 'Edit Headline',
         label: 'New title',
-        headline: 'long text',
-        id: 1
+        text: '',
+        index: null,
+        count: 150,
+        rules: [
+          value => !!value || 'Required.',
+          value => (value || '').length <= this.titleDialogData.count || `Max ${this.titleDialogData.count} characters`,
+        ],
       },
       headlines: [],
       sources: [],
     };
   },
-  async created() {
-    const [topHeadlinesRes] = await Promise.allSettled([fetchNewsTopHeadlines({ country: 'us' })]);
-    console.log(topHeadlinesRes)
-    this.headlines = [...topHeadlinesRes.value.articles];
-    console.log(this.headlines)
-  },
-  async mounted() {
-    // await this.getTopHeadlines();
-    await this.getSources();
+  created: function () {
+    this.getNewsTopHeadlines();
   },
   methods: {
     readMore(details) {
       this.$router.push({ name: 'NewsDetails', params: { details: details } });
     },
 
-    titleDialogClose() {
-      this.titleDialog = false;
+    editTitle(data) {
+      this.titleDialogData.text = data.text;
+      this.titleDialogData.index = data.index;
+      this.titleDialog = true;
     },
 
-    // async getTopHeadlines() {
-    //   try {
-    //     const response = await axios.get('https://newsapi.org/v2/top-headlines?country=us&apiKey=967789d09772458ebeecc462172800aa');
-    //     if (response.data.status === 'ok') {
-    //       this.headlines = [...response.data.articles];
-    //       console.log(response)
-    //     }
-    //   } catch (error) {
-    //     console.error(error);
-    //   }
-    // },
-
-    async getSources() {
-      try {
-        const response = await axios.get(' https://newsapi.org/v2/sources?country=us&apiKey=967789d09772458ebeecc462172800aa');
-        if (response.data.status === 'ok') {
-          this.sources = [...response.data.sources];
-          console.log(this.sources)
-        }
-      } catch (error) {
-        console.error(error);
+    titleDialogClose(data) {
+      this.titleDialog = false;
+      if (data) {
+        this.headlines[data.index].title = data.text;
       }
     },
 
-    async getHeadlineBySearchText() {
+    historyDialogClose() {
+      this.history = false;
+    },
+
+    async getNewsTopHeadlines() {
+      this.$root.$emit('overlay-loader', true)
+      let params;
+      if (this.selectedSource && this.selectedSource.id) {
+        params = { sources: this.selectedSource.id, q: this.searchText }
+      } else if (this.searchText !== '') {
+        params = { q: this.searchText }
+      } else {
+        params = { country: 'us' }
+      }
+
       try {
-        const response = await axios.get(' https://newsapi.org/v2/sources?apiKey=967789d09772458ebeecc462172800aa');
-        if (response.data.status === 'ok') {
-          this.sources = [...response.data.articles];
-          console.log(this.sources)
-        }
-      } catch (error) {
-        console.error(error);
+        const topHeadlinesRes = await fetchNewsTopHeadlines(params);
+        this.headlines = [...topHeadlinesRes.articles];
+        console.log(this.headlines)
+      } catch (e) {
+        console.error(`getNewsTopHeadlines: ${e}`)
+        this.$root.$emit('show-error', 'An error occured. Please contact administratior!');
+      } finally {
+        this.$root.$emit('overlay-loader', false);
       }
     },
 
     async filterBySource(source) {
       this.filterDialog = false;
       this.selectedSource = source;
-      const filteredHeadlinesRes = await fetchNewsTopHeadlines({ sources: source.id, q: this.searchText });
-      console.log(filteredHeadlinesRes)
-      this.headlines = [...filteredHeadlinesRes.articles];
+      this.getNewsTopHeadlines();
     },
 
-    async filterByText() {
-      const filteredHeadlinesRes = await fetchNewsTopHeadlines({ sources: this.selectedSource.id, q: this.searchText });
-      console.log(filteredHeadlinesRes)
-      this.headlines = [...filteredHeadlinesRes.articles];
+    reset() {
+      this.searchText = '';
+      this.selectedSource = '';
+      this.getNewsTopHeadlines();
+    },
+
+    async makeWrongApiCall() {
+      this.$root.$emit('overlay-loader', true);
+      try {
+        const response = await fetchErrorResult();
+        console.log(response)
+      } catch (e) {
+        console.error(`makeWrongApiCall: ${e}`)
+        this.$root.$emit('show-error', 'An error occured. Please contact administratior!');
+      } finally {
+        this.$root.$emit('overlay-loader', false);
+      }
     }
   },
 }

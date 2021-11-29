@@ -11,6 +11,7 @@
 </template>
 
 <script>
+import { appLocalStorage } from '@/app/shared/services/';
 
 export default {
   name: 'NewsDetails',
@@ -22,19 +23,19 @@ export default {
     };
   },
   mounted: function () {
-    if (localStorage.getItem('visitedLinks')) {
+    if (appLocalStorage.getItem('visitedLinks')) {
       try {
-        this.visitedLinks = JSON.parse(localStorage.getItem('visitedLinks'));
+        this.visitedLinks = appLocalStorage.getItem('visitedLinks');
       } catch (e) {
-        localStorage.removeItem('visitedLinks');
+        appLocalStorage.removeItem('visitedLinks');
       }
     }
 
-    if(this.newsDetails && this.newsDetails.title){
-      this.visitedLinks.push({date: new Date().toUTCString(), title: this.newsDetails.title});
+    if (this.newsDetails && this.newsDetails.title) {
+      this.visitedLinks.push({ date: new Date().toUTCString(), title: this.newsDetails.title });
+      appLocalStorage.setItem('visitedLinks', this.visitedLinks);
     }
 
-    localStorage.setItem('visitedLinks', JSON.stringify(this.visitedLinks));
   }
 }
 </script>

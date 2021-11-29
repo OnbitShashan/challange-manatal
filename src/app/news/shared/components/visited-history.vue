@@ -23,6 +23,7 @@
 </template>
 
 <script>
+import { appLocalStorage } from '@/app/shared/services/';
 
 export default {
     name: 'NewsVisitedHistory',
@@ -34,11 +35,12 @@ export default {
         };
     },
     created: async function () {
-        if (localStorage.getItem('visitedLinks')) {
+        if (appLocalStorage.getItem('visitedLinks')) {
             try {
-                this.visitedLinks = JSON.parse(localStorage.getItem('visitedLinks'));
+                this.visitedLinks = appLocalStorage.getItem('visitedLinks');
             } catch (e) {
-                localStorage.removeItem('visitedLinks');
+                console.error(e)
+                appLocalStorage.removeItem('visitedLinks');
             }
         }
     },

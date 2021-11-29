@@ -1,4 +1,4 @@
-# challange-mantatal
+# Challange-mantatal
 
 ## Project setup
 ```
@@ -10,15 +10,30 @@ npm install
 npm run serve
 ```
 
-### Compiles and minifies for production
+### App structure and main files
 ```
-npm run build
+\---src
+    +---app
+    |   +---news
+    |   |   +---news-details
+    |   |   +---news-headlines
+    |   |   \---shared
+    |   |       +---components
+    |   |       +---config
+    |   |       \---services
+    |   |
+    |   +---shared
+    |   |    +---components
+    |   |    \---services
+    |   |
+    |   +---app-routes.js 
+    |   +---app-state.js
+    |   \---app.vue    
+    |   
+    +---assets
+    +---plugins
+    \---main.js
 ```
 
-### Lints and fixes files
-```
-npm run lint
-```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+

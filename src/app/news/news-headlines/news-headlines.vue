@@ -153,15 +153,15 @@ export default {
       this.getNewsTopHeadlines();
     },
 
-    ...mapMutations({
-      setHeadlineFilterSources: 'news/setHeadlineFilterSources',
-      setHeadlinesSearchText: 'news/setHeadlinesSearchText'
-    }),
+    ...mapMutations('news',[
+      'setHeadlineFilterSources',
+      'setHeadlinesSearchText'
+    ]),
 
-    ...mapActions({
-      makeWrongApiCall: 'news/makeWrongApiCall', // map `this.add()` to `this.$store.dispatch('increment')`,
-      getNewsTopHeadlines: 'news/getNewsTopHeadlines'
-    })
+    ...mapActions('news', [
+      'makeWrongApiCall', // map `this.makeWrongApiCall()` to `this.$store.dispatch('increment')`,
+      'getNewsTopHeadlines'
+    ])
   }
 }
 </script>

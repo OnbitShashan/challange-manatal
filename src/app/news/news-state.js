@@ -28,7 +28,6 @@ const actions = {
         } else {
             params = { country: 'us' };
         }
-
         try {
             const topHeadlinesRes = await fetchNewsTopHeadlines(params);
             commit('setHeadlines', topHeadlinesRes.articles);
@@ -76,7 +75,6 @@ const mutations = {
     },
 
     setHeadlinesSearchText(state, text) {
-        console.log(text)
         state.headlineSearchText = text;
     },
 

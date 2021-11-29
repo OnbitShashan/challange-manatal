@@ -2,8 +2,10 @@
   <v-app>
     <v-app-bar app color="indigo" dark>
       <div class="d-flex align-center">
-        <v-btn class="mr-3" text href="/">
-          <v-icon color="white">mdi-home</v-icon>
+        <v-btn class="mr-3" text>
+          <router-link :to="{ name: 'NewsHeadlines' }">
+            <v-icon color="white">mdi-home</v-icon>
+          </router-link>
         </v-btn>
         <h2 class="mr-3">News 24x7</h2>
       </div>

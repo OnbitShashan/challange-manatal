@@ -10,11 +10,11 @@ Vue.use(Router);
 const appRoutes = [
   {
     path: '/',
-    redirect: '/news'
+    redirect: { name: 'NewsHeadlines' }
   },
   {
     path: '*',
-    redirect: '/'
+    redirect: { name: 'NewsHeadlines' }
     // name: 'page-not-found',
     // component: AppPageNotFound
   }

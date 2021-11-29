@@ -1,7 +1,7 @@
 import { fetchNewsTopHeadlines, fetchAllSources, fetchErrorResult } from './shared/services/'
 
 // initial state
-const state = () => ({
+const initialState = () => ({
     headlines: [],
     headlineSearchText: '',
     headlineFilterSources: {},
@@ -33,7 +33,7 @@ const actions = {
             commit('setHeadlines', topHeadlinesRes.articles);
         } catch (e) {
             console.error(`getNewsTopHeadlines: ${e}`)
-            commit('setSnackbarData', state.snackbarData);
+            commit('setSnackbarData', initialState().snackbarData);
             commit('setShowSnackbar', true);
         } finally {
             commit('setOverlayLoading', false);
@@ -48,19 +48,19 @@ const actions = {
             }
         } catch (e) {
             console.error(`getSources: ${e}`)
-            commit('setSnackbarData', state.snackbarData);
+            commit('setSnackbarData', initialState().snackbarData);
             commit('setShowSnackbar', true);
         }
     },
 
-    async makeWrongApiCall({ commit, state }) {
+    async makeWrongApiCall({ commit }) {
         commit('setOverlayLoading', true);
         try {
             const response = await fetchErrorResult();
             console.log(response)
         } catch (e) {
             console.error(`makeWrongApiCall: ${e}`)
-            commit('setSnackbarData', state.snackbarData);
+            commit('setSnackbarData', initialState().snackbarData);
             commit('setShowSnackbar', true);
         } finally {
             commit('setOverlayLoading', false);
@@ -91,7 +91,7 @@ const mutations = {
     },
 
     setSnackbarData(state, data) {
-        state.SnackbarData = data;
+        state.snackbarData = data;
     },
 
     setShowSnackbar(state, showSnackbar) {
@@ -100,8 +100,8 @@ const mutations = {
 }
 
 export default {
-    namespaced: true,
-    state,
     actions,
-    mutations
+    mutations,
+    namespaced: true,
+    state: initialState
 }

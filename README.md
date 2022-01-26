@@ -1,4 +1,4 @@
-# Challange-mantatal ( A VUEJS Project) 
+# A VueJS Project
 
 ## Project setup
 ```
